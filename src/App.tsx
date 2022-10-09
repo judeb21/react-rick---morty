@@ -1,25 +1,39 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { Fragment, Suspense, useContext, useEffect } from "react";
+import { fetchDataAction, toggleFavAction } from "./Action";
+import { Store } from "./Store";
 
-function App() {
+const EpisodeList = React.lazy(() => import("./EpisodesList"))
+
+function App(): JSX.Element {
+  const { state, dispatch } = useContext(Store);
+
+  // Checks if episodes exist when application is run if not run the endpoint
+  useEffect(() => {
+    state.episodes.length === 0 && fetchDataAction(dispatch);
+  });
+
+  const props = {
+    episodes: state.episodes,
+    store: { state, dispatch },
+    toggleFavAction,
+    favorites: state.favorites
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
+    <Fragment>
+      <header className="header">
+        <h1>Rick and morty</h1>
+        <p>Pick your favorite episodes:
+          <span>Fav item: {state.favorites.length}</span>
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
       </header>
-    </div>
+
+      <Suspense fallback={ <div>Loading...</div>} >
+        <section className="episode-layout">
+          <EpisodeList {...props} />
+        </section>
+      </Suspense>
+    </Fragment>
   );
 }
 
